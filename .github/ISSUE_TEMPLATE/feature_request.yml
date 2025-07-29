@@ -1,0 +1,23 @@
+cat > .github/ISSUE_TEMPLATE/feature_request.yml << 'EOF'
+name: ✨ Feature Request
+description: Suggest a new feature
+title: "[Feature]: "
+labels: ["enhancement"]
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: What feature would you like?
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: How would this help in the classroom?
+    validations:
+      required: true
+EOF

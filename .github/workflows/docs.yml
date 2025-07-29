@@ -1,0 +1,156 @@
+name: 📚 Build Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'docs/**'
+      - 'README.md'
+      - 'mkdocs.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'README.md'
+
+jobs:
+  build-docs:
+    name: Build and Deploy Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for git info
+    
+    - name: 🐍 Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: 📦 Install documentation dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin pymdown-extensions
+    
+    - name: 📝 Create mkdocs.yml if it doesn't exist
+      run: |
+        if [ ! -f mkdocs.yml ]; then
+          cat > mkdocs.yml << 'EOF'
+        site_name: Classroom Cube System
+        site_description: Interactive learning cubes for classroom engagement
+        site_url: https://yourusername.github.io/classroom-cube-system/
+        
+        theme:
+          name: material
+          palette:
+            - scheme: default
+              primary: blue
+              accent: orange
+          features:
+            - navigation.tabs
+            - navigation.sections
+            - navigation.expand
+            - navigation.top
+            - search.highlight
+        
+        markdown_extensions:
+          - pymdownx.highlight
+          - pymdownx.superfences:
+              custom_fences:
+                - name: mermaid
+                  class: mermaid
+                  format: !!python/name:pymdownx.superfences.fence_code_format
+          - pymdownx.tabbed:
+              alternate_style: true
+          - admonition
+          - pymdownx.details
+        
+        plugins:
+          - search
+          - mermaid2
+        
+        nav:
+          - Home: index.md
+          - Hardware:
+            - Assembly Guide: hardware/assembly-guide.md
+            - Parts List: hardware/parts-list.md
+            - Wiring: hardware/wiring.md
+          - Software:
+            - Installation: software/installation.md
+            - Configuration: software/configuration.md
+            - API Reference: software/api-reference.md
+          - Network:
+            - Setup Guide: network/setup-guide.md
+            - Architecture: network/mesh-architecture.md
+          - Deployment:
+            - Classroom Setup: deployment/classroom-setup.md
+            - Teacher Training: deployment/teacher-training.md
+        EOF
+        fi
+    
+    - name: 📝 Create basic documentation structure
+      run: |
+        mkdir -p docs/{hardware,software,network,deployment}
+        
+        # Create index.md if it doesn't exist
+        if [ ! -f docs/index.md ]; then
+          cat > docs/index.md << 'EOF'
+        # 🎲 Classroom Cube System Documentation
+        
+        Welcome to the Classroom Cube System documentation! This innovative educational technology transforms classroom engagement through interactive learning cubes.
+        
+        ## Quick Start
+        
+        1. **[Hardware Assembly](hardware/assembly-guide.md)** - Build your cubes
+        2. **[Software Installation](software/installation.md)** - Setup the system
+        3. **[Network Configuration](network/setup-guide.md)** - Connect everything
+        4. **[Classroom Deployment](deployment/classroom-setup.md)** - Start teaching!
+        
+        ## System Overview
+        
+        The Classroom Cube System consists of:
+        
+        - **5 Interactive Cubes** - One per group of 4 students
+        - **Teacher Dashboard** - Control and monitor activities
+        - **Mesh Network** - Reliable cube-to-cube communication
+        - **AI Integration** - Generate questions and prompts
+        
+        ## Activities
+        
+        - **Four Corners** - Position-based discussions
+        - **Multiple Choice Assessments** - Exit tickets, Do Nows, Check for Understanding
+        - **Quick Polls** - Real-time engagement feedback
+        
+        ## Getting Help
+        
+        - 📖 Browse the documentation sections
+        - 🐛 [Report issues](https://github.com/yourusername/classroom-cube-system/issues)
+        - 💡 [Request features](https://github.com/yourusername/classroom-cube-system/issues)
+        EOF
+        fi
+        
+        # Create placeholder pages for main sections
+        echo "# Hardware Assembly Guide" > docs/hardware/assembly-guide.md
+        echo "# Parts List" > docs/hardware/parts-list.md
+        echo "# Software Installation" > docs/software/installation.md
+        echo "# Network Setup Guide" > docs/network/setup-guide.md
+        echo "# Classroom Setup" > docs/deployment/classroom-setup.md
+    
+    - name: 🏗️ Build documentation
+      run: |
+        mkdocs build --strict
+    
+    - name: 🚀 Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./site
+        cname: # Add your custom domain if you have one
+    
+    - name: 📤 Upload documentation artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: documentation-site
+        path: site/

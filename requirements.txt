@@ -1,0 +1,44 @@
+**Requirements files:**
+```bash
+# Root requirements
+cat > requirements.txt << 'EOF'
+# Core dependencies
+fastapi==0.104.1
+websockets==12.0
+asyncio-mqtt==0.16.1
+pydantic==2.5.0
+sqlalchemy==2.0.23
+requests==2.31.0
+aiohttp==3.9.1
+pyyaml==6.0.1
+openai==1.3.8
+anthropic==0.7.8
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
+flake8==6.1.0
+fake-rpi==0.7.1
+EOF
+
+# Teacher hub requirements
+cat > teacher-hub/requirements.txt << 'EOF'
+fastapi==0.104.1
+uvicorn==0.24.0
+websockets==12.0
+jinja2==3.1.2
+python-multipart==0.0.6
+sqlalchemy==2.0.23
+openai==1.3.8
+EOF
+
+# Cube client requirements  
+cat > cube-client/requirements.txt << 'EOF'
+RPi.GPIO==0.7.1
+adafruit-circuitpython-ssd1306==2.12.14
+pillow==10.1.0
+luma.oled==3.12.0
+websockets==12.0
+asyncio==3.4.3
+EOF

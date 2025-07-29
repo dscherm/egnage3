@@ -1,0 +1,71 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! This helps make the Classroom Cube System better for everyone.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the system has the issue?
+      options:
+        - Teacher Hub/Dashboard
+        - Cube Hardware/Client
+        - Mesh Network
+        - AI Services
+        - Documentation
+        - Installation/Setup
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear description of what's wrong
+      placeholder: Describe what happened and what you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Set up cubes with '...'
+        2. Start activity '...'
+        3. Press button '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Your hardware and software setup
+      placeholder: |
+        - Hardware: Raspberry Pi 4 4GB
+        - OS: Raspberry Pi OS Lite 64-bit
+        - Python: 3.10.12
+        - Cubes: 5 units
+        - Network: WiFi mesh
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues first
+          required: true
+        - label: I'm using the latest version
+          required: true
