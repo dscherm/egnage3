@@ -161,4 +161,3 @@ jobs:
         else
           echo "BUILD FAILED - Check logs for details"
         fi
-'@ | Out-File -FilePath .github/workflows/ci.yml -Encoding UTF8

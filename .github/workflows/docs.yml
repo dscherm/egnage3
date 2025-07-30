@@ -68,4 +68,3 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./site
-'@ | Out-File -FilePath .github/workflows/docs.yml -Encoding UTF8
