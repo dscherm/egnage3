@@ -1,0 +1,6 @@
+﻿RPi.GPIO==0.7.1
+adafruit-circuitpython-ssd1306==2.12.14
+pillow==10.1.0
+luma.oled==3.12.0
+websockets==12.0
+fake-rpi==0.7.1
