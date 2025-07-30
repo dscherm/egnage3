@@ -1,3 +1,5 @@
+# Quick fix for your existing repository
+cat > .github/workflows/docs.yml << 'EOF'
 name: 📚 Build Documentation
 
 on:
@@ -11,6 +13,7 @@ on:
     paths:
       - 'docs/**'
       - 'README.md'
+  workflow_dispatch:
 
 jobs:
   build-docs:
@@ -21,25 +24,25 @@ jobs:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Fetch all history for git info
+        fetch-depth: 0
     
-    - name: 🐍 Set up Python 3.10
-      uses: actions/setup-python@v4
+    - name: 🐍 Set up Python 3.11
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     
     - name: 📦 Install documentation dependencies
       run: |
         python -m pip install --upgrade pip
         pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin pymdown-extensions
     
-    - name: 📝 Create mkdocs.yml if it doesn't exist
+    - name: 📝 Create mkdocs.yml if needed
       run: |
         if [ ! -f mkdocs.yml ]; then
-          cat > mkdocs.yml << 'EOF'
+          cat > mkdocs.yml << 'MKDOCS_CONFIG'
         site_name: Classroom Cube System
         site_description: Interactive learning cubes for classroom engagement
-        site_url: https://yourusername.github.io/classroom-cube-system/
+        repo_url: https://github.com/${{ github.repository }}
         
         theme:
           name: material
@@ -50,7 +53,6 @@ jobs:
           features:
             - navigation.tabs
             - navigation.sections
-            - navigation.expand
             - navigation.top
             - search.highlight
         
@@ -72,85 +74,102 @@ jobs:
         
         nav:
           - Home: index.md
-          - Hardware:
-            - Assembly Guide: hardware/assembly-guide.md
-            - Parts List: hardware/parts-list.md
-            - Wiring: hardware/wiring.md
-          - Software:
-            - Installation: software/installation.md
-            - Configuration: software/configuration.md
-            - API Reference: software/api-reference.md
-          - Network:
-            - Setup Guide: network/setup-guide.md
-            - Architecture: network/mesh-architecture.md
-          - Deployment:
-            - Classroom Setup: deployment/classroom-setup.md
-            - Teacher Training: deployment/teacher-training.md
-        EOF
+          - Quick Start: getting-started/quick-start.md
+          - Hardware: hardware/assembly-guide.md
+          - Software: software/installation.md
+          - Network: network/setup-guide.md
+          - Deployment: deployment/classroom-setup.md
+        MKDOCS_CONFIG
         fi
     
-    - name: 📝 Create basic documentation structure
+    - name: 📝 Ensure documentation exists
       run: |
-        mkdir -p docs/{hardware,software,network,deployment}
+        mkdir -p docs/{getting-started,hardware,software,network,deployment}
         
-        # Create index.md if it doesn't exist
+        # Create enhanced index if it doesn't exist
         if [ ! -f docs/index.md ]; then
-          cat > docs/index.md << 'EOF'
-        # 🎲 Classroom Cube System Documentation
-        
-        Welcome to the Classroom Cube System documentation! This innovative educational technology transforms classroom engagement through interactive learning cubes.
-        
-        ## Quick Start
-        
-        1. **[Hardware Assembly](hardware/assembly-guide.md)** - Build your cubes
-        2. **[Software Installation](software/installation.md)** - Setup the system
-        3. **[Network Configuration](network/setup-guide.md)** - Connect everything
-        4. **[Classroom Deployment](deployment/classroom-setup.md)** - Start teaching!
-        
-        ## System Overview
-        
-        The Classroom Cube System consists of:
-        
-        - **5 Interactive Cubes** - One per group of 4 students
-        - **Teacher Dashboard** - Control and monitor activities
-        - **Mesh Network** - Reliable cube-to-cube communication
-        - **AI Integration** - Generate questions and prompts
-        
-        ## Activities
-        
-        - **Four Corners** - Position-based discussions
-        - **Multiple Choice Assessments** - Exit tickets, Do Nows, Check for Understanding
-        - **Quick Polls** - Real-time engagement feedback
-        
-        ## Getting Help
-        
-        - 📖 Browse the documentation sections
-        - 🐛 [Report issues](https://github.com/yourusername/classroom-cube-system/issues)
-        - 💡 [Request features](https://github.com/yourusername/classroom-cube-system/issues)
-        EOF
+          cat > docs/index.md << 'INDEX_MD'
+        # 🎲 Classroom Cube System
+
+        Revolutionary interactive learning cubes that transform classroom engagement through AI-powered activities and simple 5-button interfaces.
+
+        ## ✨ Key Features
+
+        - **5-Button Interface**: A, B, C, D corner buttons + center generate button
+        - **Four Corners Discussions**: AI-generated prompts for different positions
+        - **Multiple Choice Assessments**: Exit tickets, Do Nows, Check for Understanding
+        - **Real-time Dashboard**: Teacher control and live analytics
+        - **Affordable**: $168 per cube, $840 for complete 5-cube classroom
+
+        ## 🚀 Quick Start
+
+        1. **[📖 Quick Start Guide](getting-started/quick-start.md)**
+        2. **[🔧 Build Hardware](hardware/assembly-guide.md)**
+        3. **[💻 Install Software](software/installation.md)**
+        4. **[🌐 Setup Network](network/setup-guide.md)**
+        5. **[🎓 Deploy in Classroom](deployment/classroom-setup.md)**
+
+        ## 🎯 Activities
+
+        ### Four Corners
+        Students press corner buttons to show their position on a statement:
+        - **A**: Strongly Agree
+        - **B**: Agree  
+        - **C**: Disagree
+        - **D**: Strongly Disagree
+        - **Center**: Generate new discussion prompts
+
+        ### Multiple Choice
+        Quick assessments with instant feedback:
+        - Exit tickets after lessons
+        - Do Nows to start class  
+        - Check for Understanding during teaching
+
+        ## 💰 Cost Breakdown
+
+        | Item | Cost per Cube | 5-Cube Total |
+        |------|---------------|---------------|
+        | Hardware | $168 | $840 |
+        | Assembly | 2-3 hours | Weekend project |
+        | Software | Free | Open source |
+
+        ## 🤝 Get Involved
+
+        - 🐛 [Report Issues](https://github.com/${{ github.repository }}/issues)
+        - 💡 [Request Features](https://github.com/${{ github.repository }}/issues/new)
+        - 🤝 [Contribute Code](https://github.com/${{ github.repository }}/pulls)
+
+        Ready to transform your classroom? **[Get started now!](getting-started/quick-start.md)** 🚀
+        INDEX_MD
         fi
         
-        # Create placeholder pages for main sections
-        echo "# Hardware Assembly Guide" > docs/hardware/assembly-guide.md
-        echo "# Parts List" > docs/hardware/parts-list.md
-        echo "# Software Installation" > docs/software/installation.md
-        echo "# Network Setup Guide" > docs/network/setup-guide.md
-        echo "# Classroom Setup" > docs/deployment/classroom-setup.md
+        # Create placeholder pages
+        echo "# 🚀 Quick Start Guide" > docs/getting-started/quick-start.md
+        echo "# 🔧 Hardware Assembly" > docs/hardware/assembly-guide.md
+        echo "# 💻 Software Installation" > docs/software/installation.md
+        echo "# 🌐 Network Setup" > docs/network/setup-guide.md
+        echo "# 🎓 Classroom Setup" > docs/deployment/classroom-setup.md
     
     - name: 🏗️ Build documentation
       run: |
-        mkdocs build --strict
+        mkdocs build --strict --verbose
     
     - name: 🚀 Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
-      uses: peaceiris/actions-gh-pages@v3
+      uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./site
-        cname: # Add your custom domain if you have one
+        enable_jekyll: false
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
+        commit_message: '📚 Deploy documentation'
     
-    - name: 📤 Upload documentation artifacts
-      uses: actions/upload-artifact@v3
+    - name: 📤 Upload documentation artifacts  
+      uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: documentation-site
         path: site/
+        retention-days: 30
+EOF
