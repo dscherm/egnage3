@@ -1,4 +1,4 @@
-yamlname: 🔧 Hardware Simulation
+name: 🔧 Hardware Simulation
 
 on:
   push:
