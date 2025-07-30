@@ -1,8 +1,4 @@
 ## 1. Main CI Pipeline - `.github/workflows/ci.yml`
-
-yaml
-name: 🎲 Classroom Cube CI
-
 on:
   push:
     branches: [ main, develop ]
