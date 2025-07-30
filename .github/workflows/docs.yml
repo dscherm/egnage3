@@ -1,79 +1,387 @@
-cat > .github/workflows/docs.yml << 'EOF'
-name: 📚 Documentation
+name: 📚 Build Documentation
 
 on:
   push:
     branches: [ main ]
-    paths: ['docs/**', 'README.md']
-  workflow_dispatch:
+    paths: 
+      - 'docs/**'
+      - 'README.md'
+      - 'mkdocs.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'README.md'
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   build-docs:
+    name: Build and Deploy Documentation
     runs-on: ubuntu-latest
     
     steps:
-    - name: 📥 Checkout
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for git info
     
-    - name: 🐍 Setup Python
+    - name: 🐍 Set up Python 3.11
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
-    - name: 📦 Install MkDocs
-      run: |
-        pip install mkdocs mkdocs-material
+    - name: 📦 Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-docs-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-docs-
+          ${{ runner.os }}-pip-
     
-    - name: 📝 Create docs structure
+    - name: 📦 Install documentation dependencies
       run: |
-        mkdir -p docs
-        
-        # Create MkDocs config
-        cat > mkdocs.yml << 'MKDOCS'
+        python -m pip install --upgrade pip
+        pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin pymdown-extensions
+    
+    - name: 📝 Create mkdocs.yml if it doesn't exist
+      run: |
+        if [ ! -f mkdocs.yml ]; then
+          cat > mkdocs.yml << 'EOF'
         site_name: Classroom Cube System
         site_description: Interactive learning cubes for classroom engagement
+        repo_url: https://github.com/${{ github.repository }}
+        repo_name: ${{ github.repository }}
         
         theme:
           name: material
           palette:
-            primary: blue
-            accent: orange
+            - media: "(prefers-color-scheme: light)"
+              scheme: default
+              primary: blue
+              accent: orange
+              toggle:
+                icon: material/brightness-7
+                name: Switch to dark mode
+            - media: "(prefers-color-scheme: dark)"
+              scheme: slate
+              primary: blue
+              accent: orange
+              toggle:
+                icon: material/brightness-4
+                name: Switch to light mode
+          features:
+            - navigation.tabs
+            - navigation.sections
+            - navigation.expand
+            - navigation.top
+            - search.highlight
+            - search.suggest
+            - content.code.copy
+            - content.code.select
+        
+        markdown_extensions:
+          - pymdownx.highlight:
+              anchor_linenums: true
+              line_spans: __span
+              pygments_lang_class: true
+          - pymdownx.inlinehilite
+          - pymdownx.snippets
+          - pymdownx.superfences:
+              custom_fences:
+                - name: mermaid
+                  class: mermaid
+                  format: !!python/name:pymdownx.superfences.fence_code_format
+          - pymdownx.tabbed:
+              alternate_style: true
+          - admonition
+          - pymdownx.details
+          - pymdownx.emoji:
+              emoji_index: !!python/name:material.extensions.emoji.twemoji
+              emoji_generator: !!python/name:material.extensions.emoji.to_svg
+          - attr_list
+          - md_in_html
+        
+        plugins:
+          - search:
+              separator: '[\s\-,:!=\[\]()"/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+          - mermaid2
         
         nav:
           - Home: index.md
-          - Quick Start: quick-start.md
-          - Hardware: hardware.md
-          - Software: software.md
-        MKDOCS
-        
-        # Create basic documentation
-        cat > docs/index.md << 'INDEX'
-        # 🎲 Classroom Cube System
-        
-        Interactive learning cubes that transform classroom engagement!
-        
-        ## Features
-        - 5-button interface (A, B, C, D + Center)
-        - Four Corners discussions  
-        - Multiple choice assessments
-        - Real-time teacher dashboard
-        - Mesh networking between cubes
-        
-        ## Quick Start
-        1. [Build the cubes](hardware.md)
-        2. [Install software](software.md)
-        3. Configure network
-        4. Start teaching!
-        
-        **Cost: $168 per cube, $840 for 5-cube classroom**
-        INDEX
-        
-        echo "# Hardware Guide" > docs/hardware.md
-        echo "# Software Guide" > docs/software.md
-        echo "# Quick Start" > docs/quick-start.md
+          - Getting Started:
+            - Quick Start: getting-started/quick-start.md
+            - Installation: getting-started/installation.md
+          - Hardware:
+            - Assembly Guide: hardware/assembly-guide.md
+            - Parts List: hardware/parts-list.md
+            - Button Layout: hardware/button-layout.md
+            - Wiring Diagrams: hardware/wiring.md
+            - Troubleshooting: hardware/troubleshooting.md
+          - Software:
+            - Installation: software/installation.md
+            - Configuration: software/configuration.md
+            - API Reference: software/api-reference.md
+            - Activities: software/activities.md
+          - Network:
+            - Setup Guide: network/setup-guide.md
+            - Mesh Architecture: network/mesh-architecture.md
+            - Security: network/security.md
+          - Deployment:
+            - Classroom Setup: deployment/classroom-setup.md
+            - Teacher Training: deployment/teacher-training.md
+            - Testing: deployment/testing.md
+          - Contributing:
+            - Development Guide: contributing/development.md
+            - Code Style: contributing/code-style.md
+        EOF
+        fi
     
-    - name: 🏗️ Build docs
-      run: mkdocs build
+    - name: 📝 Create comprehensive documentation structure
+      run: |
+        # Create all necessary directories
+        mkdir -p docs/{getting-started,hardware,software,network,deployment,contributing}
+        
+        # Create enhanced index.md
+        if [ ! -f docs/index.md ]; then
+          cat > docs/index.md << 'EOF'
+        # 🎲 Classroom Cube System
+
+        <div align="center">
+        
+        ![Classroom Cubes](https://img.shields.io/badge/Cubes-5%20Interactive-blue?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K)
+        ![Students](https://img.shields.io/badge/Students-20%20Engaged-green?style=for-the-badge)
+        ![Cost](https://img.shields.io/badge/Cost-$840%20Total-orange?style=for-the-badge)
+        
+        </div>
+
+        Revolutionary interactive learning cubes that transform classroom engagement through AI-powered collaborative activities and simple 5-button interfaces.
+
+        ## ✨ Key Features
+
+        **🎯 Simple 5-Button Interface**
+        - 4 corner buttons (A, B, C, D) for responses  
+        - 1 center button for generating new AI prompts
+        - No keyboard input required - perfect for all ages
+
+        **🤖 AI-Powered Activities**
+        - Four Corners discussions with position-specific prompts
+        - Multiple choice assessments (Exit tickets, Do Nows, Check for Understanding)
+        - Real-time question generation based on lesson content
+
+        **📊 Teacher Dashboard**
+        - Live classroom monitoring and analytics
+        - One-click activity launch across all cubes
+        - Instant response collection and visualization
+
+        **🔗 Mesh Network**
+        - Self-organizing cube-to-cube communication
+        - Fault-tolerant with automatic recovery
+        - No complex network setup required
+
+        ## 🚀 Quick Start
+
+        1. **[📖 Read the Quick Start Guide](getting-started/quick-start.md)**
+        2. **[🔧 Build Your Cubes](hardware/assembly-guide.md)**
+        3. **[💻 Install Software](software/installation.md)**
+        4. **[🌐 Configure Network](network/setup-guide.md)**
+        5. **[🎓 Deploy in Classroom](deployment/classroom-setup.md)**
+
+        ## 🎲 How It Works
+
+        ```mermaid
+        graph TD
+            A[Teacher Dashboard] -->|WiFi| B[Cube 1<br/>4 Students]
+            A -->|WiFi| C[Cube 2<br/>4 Students]
+            A -->|WiFi| D[Cube 3<br/>4 Students]
+            A -->|WiFi| E[Cube 4<br/>4 Students]
+            A -->|WiFi| F[Cube 5<br/>4 Students]
+            
+            B -.->|Mesh Network| C
+            C -.->|Mesh Network| D
+            D -.->|Mesh Network| E
+            E -.->|Mesh Network| F
+            
+            G[AI Service] -->|Generate<br/>Content| A
+        ```
+
+        ## 🎯 Activities
+
+        === "Four Corners"
+
+            Students choose positions by pressing corner buttons:
+            
+            - **A**: Strongly Agree
+            - **B**: Agree  
+            - **C**: Disagree
+            - **D**: Strongly Disagree
+            - **Center**: Generate new discussion prompts
+
+        === "Multiple Choice"
+
+            Quick assessments with instant feedback:
+            
+            - Exit tickets after lessons
+            - Do Nows to start class
+            - Check for Understanding during teaching
+            - Real-time analytics for teachers
+
+        === "Quick Polls"
+
+            Gauge classroom engagement:
+            
+            - Understanding levels (A=Poor → D=Excellent)
+            - Confidence ratings
+            - Preference surveys
+
+        ## 💰 Affordable & Scalable
+
+        | Component | Cost per Cube | 5-Cube Total |
+        |-----------|---------------|---------------|
+        | Hardware  | $168          | $840          |
+        | Assembly  | 2-3 hours     | Weekend project |
+        | Maintenance | Minimal      | Software updates |
+
+        ## 🤝 Community
+
+        Join our growing community of educators revolutionizing classroom engagement:
+
+        - 🐛 [Report Issues](https://github.com/${{ github.repository }}/issues)
+        - 💡 [Request Features](https://github.com/${{ github.repository }}/issues/new?template=feature_request.yml)
+        - 🤝 [Contribute](contributing/development.md)
+        - 📧 [Get Support](mailto:support@classroomcubes.edu)
+
+        ## 📄 License
+
+        Open source under the [MIT License](https://github.com/${{ github.repository }}/blob/main/LICENSE) - use freely in your classroom!
+
+        ---
+
+        **Ready to transform your classroom? [Get started now!](getting-started/quick-start.md)** 🚀
+        EOF
+        fi
+        
+        # Create getting started pages
+        cat > docs/getting-started/quick-start.md << 'EOF'
+        # 🚀 Quick Start Guide
+
+        Get your Classroom Cube System up and running in under 2 hours!
+
+        ## What You'll Need
+
+        - 5× Raspberry Pi 4 (4GB)
+        - Cube hardware components ([see parts list](../hardware/parts-list.md))
+        - Basic tools for assembly
+        - WiFi network access
+
+        ## Step 1: Build One Cube (30 minutes)
+
+        Start with a single cube to test the concept:
+
+        1. **[Assemble the cube](../hardware/assembly-guide.md)** - Follow the detailed guide
+        2. **[Install software](../software/installation.md)** - Set up the Raspberry Pi
+        3. **[Test functionality](../hardware/troubleshooting.md)** - Verify all buttons work
+
+        ## Step 2: Set Up Teacher Hub (15 minutes)
+
+        1. Install teacher dashboard software
+        2. Configure WiFi network
+        3. Connect to your first cube
+
+        ## Step 3: Scale to 5 Cubes (1 hour)
+
+        1. Build remaining 4 cubes
+        2. Add to mesh network
+        3. Test classroom activities
+
+        ## Step 4: First Classroom Activity (5 minutes)
+
+        1. Launch Four Corners activity
+        2. Watch students engage
+        3. View real-time analytics
+
+        **🎉 Congratulations! Your classroom is now transformed!**
+        EOF
+
+        cat > docs/getting-started/installation.md << 'EOF'
+        # 💻 Installation Guide
+
+        Complete software installation for the Classroom Cube System.
+
+        ## Prerequisites
+
+        - Raspberry Pi 4 (4GB recommended)
+        - Raspberry Pi OS Lite (64-bit)
+        - Python 3.10+
+        - Internet connection
+
+        ## Teacher Hub Installation
+
+        ```bash
+        # Clone repository
+        git clone https://github.com/${{ github.repository }}.git
+        cd classroom-cube-system
+
+        # Install teacher hub
+        cd teacher-hub
+        pip install -r requirements.txt
+        python main.py
+        ```
+
+        ## Cube Client Installation
+
+        ```bash
+        # On each cube Raspberry Pi
+        cd cube-client
+        pip install -r requirements.txt
+        python main.py
+        ```
+
+        ## Development Setup
+
+        For development without hardware:
+
+        ```bash
+        pip install fake-rpi
+        python cube-client/main.py --simulation
+        ```
+
+        ## Next Steps
+
+        - [Configure network](../network/setup-guide.md)
+        - [Test hardware](../hardware/troubleshooting.md)
+        - [Deploy in classroom](../deployment/classroom-setup.md)
+        EOF
+        
+        # Create hardware pages
+        echo "# 🔧 Hardware Assembly Guide" > docs/hardware/assembly-guide.md
+        echo "# 📋 Parts List and Costs" > docs/hardware/parts-list.md
+        echo "# 🔘 5-Button Layout Design" > docs/hardware/button-layout.md
+        echo "# ⚡ Wiring Diagrams" > docs/hardware/wiring.md
+        echo "# 🔍 Hardware Troubleshooting" > docs/hardware/troubleshooting.md
+        
+        # Create software pages
+        echo "# 💻 Software Installation" > docs/software/installation.md
+        echo "# ⚙️ Configuration Guide" > docs/software/configuration.md
+        echo "# 📚 API Reference" > docs/software/api-reference.md
+        echo "# 🎯 Activities Documentation" > docs/software/activities.md
+        
+        # Create network pages
+        echo "# 🌐 Network Setup Guide" > docs/network/setup-guide.md
+        echo "# 🔗 Mesh Network Architecture" > docs/network/mesh-architecture.md
+        echo "# 🔒 Network Security" > docs/network/security.md
+        
+        # Create deployment pages
+        echo "# 🎓 Classroom Setup Guide" > docs/deployment/classroom-setup.md
+        echo "# 👨‍🏫 Teacher Training Materials" > docs/deployment/teacher-training.md
+        echo "# 🧪 Testing Procedures" > docs/deployment/testing.md
+        
+        # Create contributing pages
+        echo "# 🛠️ Development Guide" > docs/contributing/development.md
+        echo "# 🎨 Code Style Guidelines" > docs/contributing/code-style.md
+    
+    - name: 🏗️ Build documentation
+      run: |
+        mkdocs build --strict --verbose
     
     - name: 🚀 Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
@@ -81,4 +389,26 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./site
-EOF
+        enable_jekyll: false
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
+        commit_message: '📚 Deploy documentation updates'
+    
+    - name: 📤 Upload documentation artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: documentation-site
+        path: site/
+        retention-days: 30
+        compression-level: 6
+    
+    - name: 📊 Documentation build summary
+      if: always()
+      run: |
+        echo "📚 Documentation Build Summary"
+        echo "=============================="
+        echo "Build status: ${{ job.status }}"
+        echo "Site size: $(du -sh site/ | cut -f1)"
+        echo "Pages built: $(find site/ -name "*.html" | wc -l)"
+        echo "Documentation URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
