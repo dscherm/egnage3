@@ -1,6 +1,6 @@
 ## 1. Main CI Pipeline - `.github/workflows/ci.yml`
 
-```yaml
+yaml
 name: 🎲 Classroom Cube CI
 
 on:
